@@ -1,0 +1,172 @@
+{
+  "name": "Entrega 1 IA avanzado",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a5848606-685c-424f-bd10-882672da8ff6",
+      "name": "Trigger: Consulta de Chat",
+      "webhookId": "f9f1e52f-0713-4e35-aa86-f62d0cdf7e9a"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "[ROL Y ÁMBITO]\nActúas como el Asistente Especialista en Triaje de Reclamaciones Financieras y Facturas. Tu ámbito de acción se limita exclusivamente a la verificación de facturas y el estado de cobros dentro de la base de datos contable. No tienes autorización para emitir pagos, aprobar reembolsos ni modificar contratos.\n\n[OBJETIVO]\nIdentificar el número de comprobante o factura mencionado por el usuario en el chat, consultar la herramienta contable asociada y responder de forma clara y precisa con el estado actual del trámite.\n\n[REGLAS DE OPERACIÓN]\n1. Si el usuario proporciona un número de factura o comprobante, activa la herramienta de consulta contable para extraer los datos reales.\n2. Mantén un tono formal, profesional y corporativo en todo momento.\n3. Está strictly prohibido utilizar lenguaje inclusivo (no usar 'e', 'x' ni '@').\n\n[ESCALAMIENTO Y LÍMITES]\nSi el comprobante no existe en la planilla o el usuario solicita una devolución de dinero, detén el ciclo autónomo y responde: \"Su caso ha sido registrado y derivado al departamento de tesorería para revisión manual.\"",
+          "maxIterations": 5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "c6e52663-c9a1-4214-821d-cbe5d59da26c",
+      "name": "Agente: Triaje de Facturas"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        208
+      ],
+      "id": "6b1ae38b-62d7-4eb4-964b-e4b6357ef730",
+      "name": "Modelo: Gemini 3 Flash",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "9QhWIFXOo33OFZh5",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Esta herramienta debe activarse obligatoriamente cada vez que el usuario consulte por el estado de pago, fecha de vencimiento, cliente o monto de una factura, comprobante o número de cuenta específico en el sistema contable.",
+        "documentId": {
+          "__rl": true,
+          "value": "1K3hWe26e4afDKjXn6L56BMCDkhs5AgvidBzUDf2tGBk",
+          "mode": "list",
+          "cachedResultName": "Auditoría de Facturas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K3hWe26e4afDKjXn6L56BMCDkhs5AgvidBzUDf2tGBk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1K3hWe26e4afDKjXn6L56BMCDkhs5AgvidBzUDf2tGBk/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        368,
+        240
+      ],
+      "id": "d97b53c0-3ae8-441c-a037-23983a99a470",
+      "name": "Herramienta: Base de Datos de Facturas",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "IRxTduy50y6zxVOy",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "melodia.massolo@gmail.com",
+        "subject": "=Audit Log: Consulta de Factura Procesada por IA",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        576,
+        0
+      ],
+      "id": "a80931d1-bd14-4fcf-883e-30412e80f532",
+      "name": "Gmail: Enviar Log de Observabilidad",
+      "webhookId": "dbbfcc72-7465-4bb8-b88b-06f2ede7f12a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4J81w7T9Y3GCBOMp",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Trigger: Consulta de Chat": {
+      "main": [
+        [
+          {
+            "node": "Agente: Triaje de Facturas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modelo: Gemini 3 Flash": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente: Triaje de Facturas",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Herramienta: Base de Datos de Facturas": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente: Triaje de Facturas",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente: Triaje de Facturas": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Enviar Log de Observabilidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ed8fc43c-52f9-417a-ba70-4a39f904df4b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "83c1f7c1795052f1f6de08714b474c188587ae5132ee8772218f31c095e7e085"
+  },
+  "nodeGroups": [],
+  "id": "8jjEHYdPBNPQyBlM",
+  "tags": []
+}
