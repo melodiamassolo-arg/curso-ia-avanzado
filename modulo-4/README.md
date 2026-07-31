@@ -64,5 +64,5 @@ El workflow crea un borrador en Gmail que debe ser revisado y aprobado manualmen
 
 ## Archivos incluidos
 
-- PreEntrega_Modulo4_MelodiaMassolo.json
+- checkpoint4_melodia_massolo.json
 - Capturas del funcionamiento del workflow
